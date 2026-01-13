@@ -1,0 +1,19 @@
+{
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/sources/poky/bitbake/lib",
+        "${workspaceFolder}/sources/poky/meta/lib"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/sources/poky/bitbake/lib",
+        "${workspaceFolder}/sources/poky/meta/lib"
+    ],
+    "files.associations": {
+        "*.json5": "jsonc",
+        "Kconfig": "kconfig",
+        "*.overlay": "dts",
+        "raspberrypi5_defconfig": "kconfig",
+        "*.pde": "java",
+        "*.conf": "bitbake",
+        "*.inc": "bitbake"
+    }
+}
