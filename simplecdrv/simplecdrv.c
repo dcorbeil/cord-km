@@ -75,22 +75,6 @@ static ssize_t drvled_write(struct file *file,
     return length;
 }
 
-/* This is called when the file associated with the char device is opened */
-static int drvled_open(struct inode *inode, struct file *file)
-{
-    pr_info("%s: Opening\n", DRIVER_NAME);
-
-    return 0;
-}
-
-/* This is called when the file associated with the char device is closed */
-static int drvled_close(struct inode *inode, struct file *file)
-{
-    pr_info("%s: Closing\n", DRIVER_NAME);
-
-    return 0;
-}
-
 static const struct file_operations drvled_fops = {
     .owner = THIS_MODULE,
     .write = drvled_write,

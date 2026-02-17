@@ -50,3 +50,23 @@ mknod /dev/led c <major_number> 0
 - `/dev/led`: the file we want to create that'll be associated with our char driver
 - `c`: means char driver
 - `0`: The minor number. Start at 0 because it's the first and only registered node for the driver
+
+## Using
+
+Turn on the led
+
+```shell
+echo 1 > /dev/led
+```
+
+Turn off the led
+
+```shell
+echo 0 > /dev/led
+```
+
+Query if it's on or off
+
+```shell
+cat /dev/led
+```
