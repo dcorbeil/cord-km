@@ -11,7 +11,7 @@
 #define LED_OFF 0
 
 static struct {
-    dev_t devnum; // store major and minor number representing our driver. Is it vid:pid??
+    dev_t devnum; // store major and minor number representing our driver
     struct cdev cdev; // store the char device that will be registered in the kernel
     unsigned int led_status;
 } drvled_data;
@@ -75,6 +75,7 @@ static ssize_t drvled_write(struct file *file,
     return length;
 }
 
+/* This is called when the file associated with the char device is opened */
 static int drvled_open(struct inode *inode, struct file *file)
 {
     pr_info("%s: Opening\n", DRIVER_NAME);
@@ -82,6 +83,7 @@ static int drvled_open(struct inode *inode, struct file *file)
     return 0;
 }
 
+/* This is called when the file associated with the char device is closed */
 static int drvled_close(struct inode *inode, struct file *file)
 {
     pr_info("%s: Closing\n", DRIVER_NAME);
@@ -93,8 +95,8 @@ static const struct file_operations drvled_fops = {
     .owner = THIS_MODULE,
     .write = drvled_write,
     .read = drvled_read,
-    .open = drvled_open,
-    .release = drvled_close,
+    .open = NULL, /* Not setting this callback but leaving it for documentation purposes */
+    .release = NULL, /* Not setting this callback but leaving it for documentation purposes */
 };
 
 /*
@@ -146,5 +148,6 @@ module_init(drvled_init);
 module_exit(drvled_exit);
 
 MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("Extremely simple char driver that emulates an LED turning on or off");
 MODULE_AUTHOR("David Corbeil <cord.sw.consulting@gmail.com>");
 MODULE_VERSION("1.0");
