@@ -11,7 +11,7 @@
 #define LED_ON 1
 #define LED_OFF 0
 
-/* Base address for GPIO control registers. Since this is hardcoded, it will only work for some
+/* Base address for GPIO0 control registers. Since this is hardcoded, it will only work for some
  * specific hardware. In this case I'm writing this driver for Beaglebone Black.
  * https://www.ti.com/lit/ug/spruh73q/spruh73q.pdf - Section 25.4
  */
@@ -25,6 +25,7 @@
 
 #define GPIO0_PAGE_SIZE 1024
 
+/* Operate on GPIO0_31 */
 #define GPIO_NUMBER 31
 #define GPIO_BIT (1 << GPIO_NUMBER)
 
@@ -134,11 +135,23 @@ static int __init drvled_init(void)
     int result;
 
     /* Request to access memory region for the hardware registers. It will be denied and an error
-     * will be returned if it's already been granted to another driver.
+     * will be returned if it's already been granted to another driver. This can be observed by
+     * looking at /proc/iomem. At the address range we're trying to map (44e07000-44e07fff), we see
+     * that it is taken by 44e07000.gpio gpio@0. Digging a bit deeper in the device tree, we can see
+     * that ultimately omap4-gpio [0] is the driver controlling those gpios. If we go and look into
+     * the drivers source code we can even see how it's controlling the same registers as we do. For
+     * example GPIO_OE for direction [1]. We can even see the call to devm_platform_ioremap_resource()
+     * that under the hood does both the request of memory and the remapping into virtual memory [2]
+     * Note that this function is the new way of doing what we're doing here (or attempting to do)
+     * as what we are doing is deprecated.
+     *
+     * [0]: https://github.com/torvalds/linux/blob/038d61fd642278bab63ee8ef722c50d10ab01e8f/arch/arm/boot/dts/ti/omap/am33xx-l4.dtsi#L160
+     * [1]: https://github.com/torvalds/linux/blob/038d61fd642278bab63ee8ef722c50d10ab01e8f/drivers/gpio/gpio-omap.c#L1335
+     * [2]: https://github.com/torvalds/linux/blob/038d61fd642278bab63ee8ef722c50d10ab01e8f/drivers/gpio/gpio-omap.c#L1446
      */
     /* Will leave the request and corresponding releases commented out for educational purposes.
      * Access is not granted on my platform. Normally that would be unacceptable but for academic
-     * purposes, I judge it's ok
+     * purposes, I judge it's ok.
      */
     // struct resource *res = request_mem_region(GPIO0_BASE, GPIO0_PAGE_SIZE, DRIVER_NAME);
     // if (!res) {

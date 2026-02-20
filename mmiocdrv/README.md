@@ -48,3 +48,30 @@ Query if it's on or off
 ```shell
 cat /dev/led
 ```
+
+or observe that it's on or off by looking at it 😄
+
+## Mapping of I/O memory
+
+On in "real" scenarios you normally must "request" the physical memory region that backs a set
+of device registers before mapping it into the kernel's virtual address space. The
+commented-out call to `request_mem_region()` in the driver shows that step: it prevents
+two drivers from claiming the same address range and helps avoid accidental conflicts.
+
+On boards like the Beaglebone Black those GPIO registers are often already owned by the
+system's GPIO driver, so a direct `request_mem_region()` will fail; that's why the
+example leaves it commented out for educational purposes. The modern, safer pattern in
+platform drivers is to use device-managed helpers such as `devm_platform_ioremap_resource()`
+which both request and map the resource for you. Directly using `ioremap()` without
+requesting the region is simpler for examples but may not work on real hardware and
+isn't recommended for production drivers.
+
+This can be observed on the actual board by running:
+
+```bash
+cat /proc/iomem
+```
+
+and observing that the memory region we're playing with is already controlled by the GPIO driver.
+
+See [mmiocdrv.c](mmiocdrv.c#L132)
