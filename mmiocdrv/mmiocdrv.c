@@ -132,7 +132,7 @@ static void drvled_setdirection(void)
 */
 static int __init drvled_init(void)
 {
-    int result;
+    int result = 0;
 
     /* Request to access memory region for the hardware registers. It will be denied and an error
      * will be returned if it's already been granted to another driver. This can be observed by

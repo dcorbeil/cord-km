@@ -11,13 +11,16 @@
 #define LED_OFF 0
 
 static struct {
-    dev_t devnum; // store major and minor number representing our driver
-    struct cdev cdev; // store the char device that will be registered in the kernel
+    /* store major and minor number representing our driver */
+    dev_t devnum;
+    /* store the char device that will be registered in the kernel */
+    struct cdev cdev;
     unsigned int led_status;
 } drvled_data;
 
 static void drvled_setled(unsigned int status)
 {
+    /* Track whether the led is on or off */
     drvled_data.led_status = status;
 }
 
@@ -30,7 +33,7 @@ static ssize_t drvled_read(struct file *file,
     /* The number of byte actually written to the buffer */
     int size;
 
-    // check if EOF
+    /* check if EOF */
     if (*offset > 0) {
         return 0;
     }
@@ -53,9 +56,9 @@ static ssize_t drvled_read(struct file *file,
 }
 
 static ssize_t drvled_write(struct file *file,
-   const char *buffer,    /* The buffer to fill with data */
-   size_t length,   /* The length of the buffer     */
-   loff_t *offset)  /* Our offset in the file       */
+   const char *buffer, /* The buffer to fill with data */
+   size_t length,      /* The length of the buffer     */
+   loff_t *offset)     /* Our offset in the file       */
 {
     char kbuf = 0;
 
@@ -91,9 +94,9 @@ static const struct file_operations drvled_fops = {
 */
 static int __init drvled_init(void)
 {
-    int result;
+    int result = 0;
 
-    // Allocate a range or char device numbers. Major is chosen dynamically and inserted in devnum (minor too?)
+    /* Allocate a range or char device numbers. Major is chosen dynamically and inserted in devnum */
     result = alloc_chrdev_region(&drvled_data.devnum, 0, 1, DRIVER_NAME);
     if (result) {
         pr_err("%s: Failed to allocate driver number (%d)!\n", DRIVER_NAME, result);
@@ -102,12 +105,13 @@ static int __init drvled_init(void)
 
     pr_debug("%s: Allocated major number: %d", DRIVER_NAME, drvled_data.devnum);
 
-    // Initialize the char device structure. Tells the kernel that each time read()/write() is called
-    // redirect to those callbacks to handle those operations. Like Zephyr, which makes sense as its
-    // heavily inspired by the Linux kernel
+    /* Initialize the char device structure. Tells the kernel that each time read()/write() is called
+     * redirect to those callbacks to handle those operations. Like Zephyr, which makes sense as its
+     * heavily inspired by the Linux kernel
+     */
     cdev_init(&drvled_data.cdev, &drvled_fops);
 
-    // Register/add the allocated char device major and minor
+    /* Register/add the allocated char device major and minor */
     result = cdev_add(&drvled_data.cdev, drvled_data.devnum, 1);
     if (result) {
         pr_err("%s: Failed to register char device? (%d)\n", DRIVER_NAME, result);
