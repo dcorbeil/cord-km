@@ -2,7 +2,7 @@
 
 This very simple LED driver using the LED framework controls GPIO0 31 on the Beaglebone Black.
 This driver exists for academic only. It simply showcases how a gpio can be controlled from the LED
-framework driver using memory mapped IO.
+framework driver using memory mapped IO and LED framework.
 
 Using the LED framework is one step closer to a real driver implementation as it leverages abstractions
 provided by the Linux kernel. Upsides of using the LED framework compared to not using it is that it

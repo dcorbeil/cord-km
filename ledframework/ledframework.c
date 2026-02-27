@@ -119,6 +119,7 @@ ret_ok:
 
 static void __exit drvled_exit(void)
 {
+    led_classdev_unregister(&drvled_data->led_cdev);
     kfree(drvled_data);
     iounmap(drvled_data->regbase);
     pr_info("%s: exiting\n", DRIVER_NAME);
