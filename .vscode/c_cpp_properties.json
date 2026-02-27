@@ -3,10 +3,10 @@
         {
             "name": "Linux Kernel module",
             "includePath": [
-                "/opt/cord/test_yocto_sdk/sysroots/cortexa7t2hf-neon-vfpv4-oe-linux-gnueabi/usr/src/kernel/include",
-                "/opt/cord/test_yocto_sdk/sysroots/cortexa7t2hf-neon-vfpv4-oe-linux-gnueabi/lib/modules/6.6.63-v7/build/arch/arm/include"
+                "/opt/cord/cord_sdk-x86_64/sysroots/armv7at2hf-neon-oe-linux-gnueabi/usr/src/kernel/include",
+                "/opt/cord/cord_sdk-x86_64/sysroots/armv7at2hf-neon-oe-linux-gnueabi/lib/modules/6.16.0/build/arch/arm/include"
             ],
-            "compilerPath": "/opt/cord/test_yocto_sdk/sysroots/cortexa7t2hf-neon-vfpv4-oe-linux-gnueabi/usr/bin/arm-oe-linux-gnueabi-gcc",
+            "compilerPath": "/opt/cord/cord_sdk-x86_64/sysroots/armv7at2hf-neon-oe-linux-gnueabi/usr/bin/arm-oe-linux-gnueabi-gcc",
             "cStandard": "c99",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-arm64",
