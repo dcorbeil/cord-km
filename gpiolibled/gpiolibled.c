@@ -29,7 +29,7 @@ static void drvled_setled(unsigned int status)
     if (status == LED_ON) {
         gpiod_set_value(drvled_data->desc, 1);
     } else {
-        gpiod_set_value(drvled_data->desc, 1);
+        gpiod_set_value(drvled_data->desc, 0);
     }
 }
 
