@@ -2,7 +2,9 @@
 
 Modules were written while following [this presentation](https://www.youtube.com/watch?v=XoYkHUnmpQo)
 on Linux device driver development. The presenter's source code is available
-[here](https://www.dropbox.com/scl/fi/a7b52z7shcntwdjvak1wd/ldd.tar.bz2?dl=0&e=23&rlkey=zqmtdrterhlicetijanwivg0x).
+[here](https://www.dropbox.com/scl/fi/a7b52z7shcntwdjvak1wd/ldd.tar.bz2?dl=0&e=23&rlkey=zqmtdrterhlicetijanwivg0x)
+and the slides are available [here](https://www.dropbox.com/scl/fi/n8uv8fwznwpl857o1mj6g/slides.pdf?rlkey=3mw6df2i1dttntnndwq31d8vd&e=1&dl=0).
+It's a great presentation, highly recommend it.
 
 Target board: [BeagleBone Black](https://www.beagleboard.org/boards/beaglebone-black), with an LED
 wired on `GPIO0 31` (pin 13 on P8 connector).

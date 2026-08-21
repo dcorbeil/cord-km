@@ -114,3 +114,11 @@ Poking at the various symlinks in those directories, they all end up expressing 
 between driver and device. For instance, `drivers/dtled/cordleds` is a symlink back to the device
 under `devices/`, and `devices/cordleds/driver` points back to the driver. This cross-linking is
 how the kernel tracks the binding.
+
+#### Diagram
+
+Diagram of how this driver interacts with other drivers in the Linux kernel. This one includes
+a section about I2C, this shows that our kernel driver could be used to control and LED through
+a GPIO expander with minimal changes.
+
+![alt text](image.png)
