@@ -12,20 +12,20 @@
 #define LED_ON 1
 #define LED_OFF 0
 
-struct dtled_data_st {
+struct dtled_data {
     /* Descriptor for our gpio */
     struct gpio_desc *desc;
     struct led_classdev led_cdev;
+    u8 can_sleep;
 };
 
-static struct dtled_data_st* dtled_data;
-
-static void dtled_setled(unsigned int status)
+static void dtled_setled(struct led_classdev* led_cdev, unsigned int status)
 {
-    if (status == LED_ON) {
-        gpiod_set_value(dtled_data->desc, 1);
+    struct dtled_data* data = container_of(led_cdev, struct dtled_data, led_cdev);
+    if (data->can_sleep) {
+        gpiod_set_value_cansleep(data->desc, status);
     } else {
-        gpiod_set_value(dtled_data->desc, 0);
+        gpiod_set_value(data->desc, status);
     }
 }
 
@@ -33,48 +33,90 @@ static void dtled_change_state(struct led_classdev* led_cdev,
                                 enum led_brightness brightness)
 {
     if (brightness) {
-        dtled_setled(LED_ON);
+        dtled_setled(led_cdev, LED_ON);
     } else {
-        dtled_setled(LED_OFF);
+        dtled_setled(led_cdev, LED_OFF);
     }
 }
+
+
+struct gpio_leds_priv {
+    int num_leds;
+    struct dtled_data leds[] __counted_by(num_leds);
+};
 
 static int dtled_probe(struct platform_device *pdev)
 {
     struct device_node *np = pdev->dev.of_node;
-    struct device_node *child = NULL;
+    // struct device_node *child = NULL;
     int result = 0;
     int gpio = 0;
+    int count = 0;
+    int used = 0;
 
-    child = of_get_next_child(np, NULL);
+    struct device *dev = &pdev->dev;
 
-    dtled_data = devm_kzalloc(&pdev->dev, sizeof(*dtled_data), GFP_KERNEL);
+	struct gpio_leds_priv *priv;
 
-    if (!dtled_data) {
+    count = device_get_child_node_count(dev);
+    dev_info(&pdev->dev, "leds count: %d\n", count);
+
+    // FIXME: Memory leak? memory is not deallocated or does it need to be deallocated??
+    priv = devm_kzalloc(dev, struct_size(priv, leds, count), GFP_KERNEL);
+    if (!priv)
         return -ENOMEM;
+    priv->num_leds = used;
+
+    // TODO: Would the non-of variant be better (device_for_each_child_node_scoped)?
+    // I don't fully know what the differences between the two are
+    for_each_child_of_node_scoped(np, child) {
+
+        struct dtled_data *dtled_dat = &priv->leds[used];
+        struct gpio_led led = {};
+
+        led.gpiod = devm_fwnode_gpiod_get(dev, of_fwnode_handle(child), NULL, GPIOD_ASIS, NULL);
+        if (IS_ERR(led.gpiod)) {
+            dev_err(&pdev->dev, "Failed to get GPIO '%pfw'\n",
+                    child);
+            return ERR_CAST(led.gpiod);
+            // return -ERR_CAST;
+        }
+
+        dtled_dat->desc = led.gpiod;
+
+        dtled_dat->led_cdev.name = of_get_property(child, "label", NULL);
+        dtled_dat->led_cdev.brightness_set = dtled_change_state;
+
+        int can_sleep = gpiod_cansleep(dtled_dat->desc);
+        dev_info(&pdev->dev, "can_sleep: %d\n", can_sleep);
+        dtled_dat->can_sleep = can_sleep;
+        int active_low = gpiod_is_active_low(dtled_dat->desc);
+        dev_info(&pdev->dev, "is active low: %d\n", active_low);
+
+        if (IS_ERR(dtled_dat->desc)) {
+            dev_info(&pdev->dev, "Is error: Skipping unavailable LED gpio %d (%s)\n",
+                    gpio, dtled_dat->led_cdev.name);
+        }
+        if (!dtled_dat->desc) {
+            dev_info(&pdev->dev, "null: Skipping unavailable LED gpio %d (%s)\n",
+                    gpio, dtled_dat->led_cdev.name);
+        }
+
+        dev_info(&pdev->dev, "name: %s\n", dtled_dat->led_cdev.name);
+        dev_info(&pdev->dev, "desc: %p\n", dtled_dat->desc);
+
+        // Register the device gotten from the device tree in the led framework
+        result = devm_led_classdev_register(&pdev->dev, &dtled_dat->led_cdev);
+        if (result) {
+            dev_err(&pdev->dev, "Error registering led\n");
+            return result;
+        }
+
+        gpiod_direction_output(dtled_dat->desc, 0);
+
+        used++;
     }
-
-    gpio = of_get_named_gpio(child, "gpios", 0);
-
-    result = devm_gpio_request(&pdev->dev, gpio, pdev->name);
-    if (result) {
-        dev_err(&pdev->dev, "Error requesting GPIO\n");
-        return result;
-    }
-
-    dtled_data->desc = gpio_to_desc(gpio);
-
-    dtled_data->led_cdev.name = of_get_property(child, "label", NULL);
-    dtled_data->led_cdev.brightness_set = dtled_change_state;
-
-    // Register the device gotten from the device tree in the led framework
-    result = devm_led_classdev_register(&pdev->dev, &dtled_data->led_cdev);
-    if (result) {
-        dev_err(&pdev->dev, "Error registering led\n");
-        return result;
-    }
-
-    gpiod_direction_output(dtled_data->desc, 0);
+    priv->num_leds = count;
 
     dev_info(&pdev->dev, "initialized.\n");
 
