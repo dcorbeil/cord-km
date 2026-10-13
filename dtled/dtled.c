@@ -39,6 +39,12 @@ static void dtled_change_state(struct led_classdev* led_cdev,
     }
 }
 
+static int dtled_change_state_blocking(struct led_classdev *led_cdev,
+    enum led_brightness value)
+{
+    dtled_setled(led_cdev, value);
+    return 0;
+}
 
 struct gpio_leds_priv {
     int num_leds;
@@ -76,22 +82,26 @@ static int dtled_probe(struct platform_device *pdev)
 
         led.gpiod = devm_fwnode_gpiod_get(dev, of_fwnode_handle(child), NULL, GPIOD_ASIS, NULL);
         if (IS_ERR(led.gpiod)) {
-            dev_err(&pdev->dev, "Failed to get GPIO '%pfw'\n",
-                    child);
-            return ERR_CAST(led.gpiod);
-            // return -ERR_CAST;
+            dev_err(&pdev->dev, "Failed to get GPIO '%pfw'\n", child);
+            return -ENOENT;
         }
 
         dtled_dat->desc = led.gpiod;
-
         dtled_dat->led_cdev.name = of_get_property(child, "label", NULL);
-        dtled_dat->led_cdev.brightness_set = dtled_change_state;
 
         int can_sleep = gpiod_cansleep(dtled_dat->desc);
         dev_info(&pdev->dev, "can_sleep: %d\n", can_sleep);
         dtled_dat->can_sleep = can_sleep;
         int active_low = gpiod_is_active_low(dtled_dat->desc);
         dev_info(&pdev->dev, "is active low: %d\n", active_low);
+
+        if (!dtled_dat->can_sleep) {
+            dtled_dat->led_cdev.brightness_set = dtled_change_state;
+        } else {
+            // Some bus drivers can block while setting the led value. ie: gpio expanders
+            // So we need to tell the platform driver so it can handle things correctly
+            dtled_dat->led_cdev.brightness_set_blocking = dtled_change_state_blocking;
+        }
 
         if (IS_ERR(dtled_dat->desc)) {
             dev_info(&pdev->dev, "Is error: Skipping unavailable LED gpio %d (%s)\n",
